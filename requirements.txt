@@ -1,0 +1,11 @@
+langchain-mistralai
+langchain
+python-dotenv
+pandas
+joblib
+scikit-learn==1.6.1
+langgraph
+pydantic
+langchain-community
+fastapi
+uvicorn[standard]

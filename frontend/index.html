@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Loan Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="grain"></div>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="mark">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/>
+      </svg>
+    </div>
+    <div>
+      <div class="name">Ledger</div>
+      <div class="sub">Loan Assistant</div>
+    </div>
+  </div>
+
+  <div class="status-card">
+    <div class="row"><span class="dot" id="statusDot"></span><span id="statusText">Checking backend…</span></div>
+    <div class="row"><span class="dot brass"></span><span>127.0.0.1:8000</span></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <ol class="ledger-index">
+    <li><span class="num">01</span>Ask a question, chat freely</li>
+    <li><span class="num">02</span>Mention a loan &amp; a slip opens</li>
+    <li><span class="num">03</span>Fill in the eleven fields</li>
+    <li><span class="num">04</span>Stamp it for your prediction</li>
+  </ol>
+
+  <div class="sidebar-foot">
+    <div class="foot-note">ML-based predictions are not a guarantee of final approval.</div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="page-head">
+    <div class="page-head-text">
+      <h1>The Loan Assistant</h1>
+      <p>Ask about eligibility and I'll open an application slip when it's time.</p>
+    </div>
+
+    <div class="hero-illustration" aria-hidden="true">
+      <svg viewBox="0 0 600 210" width="220" height="77">
+        <text x="300" y="26" text-anchor="middle" class="hi-label hi-title">MORTGAGE</text>
+
+        <!-- house -->
+        <g class="hi-house">
+          <path d="M300 40 L268 66 L268 100 L332 100 L332 66 Z" fill="none" stroke-width="4" stroke-linejoin="round"/>
+          <rect x="292" y="80" width="16" height="20" fill="none" stroke-width="3"/>
+        </g>
+
+        <!-- beam -->
+        <line x1="70" y1="128" x2="530" y2="128" class="hi-beam" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="70" cy="128" r="7" class="hi-hook"/>
+        <circle cx="530" cy="128" r="7" class="hi-hook"/>
+
+        <!-- pivot -->
+        <path d="M300 128 L276 172 L324 172 Z" class="hi-pivot"/>
+        <rect x="264" y="172" width="72" height="8" rx="2" class="hi-base"/>
+
+        <!-- approval side -->
+        <circle cx="112" cy="150" r="13" class="hi-badge approve"/>
+        <path d="M106 150 l4 5 l9 -10" fill="none" stroke="#0D1420" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="112" y="196" text-anchor="middle" class="hi-label">APPROVAL</text>
+
+        <!-- rejection side -->
+        <circle cx="488" cy="150" r="13" class="hi-badge reject"/>
+        <path d="M482 144 l12 12 M494 144 l-12 12" stroke="#0D1420" stroke-width="2.4" stroke-linecap="round"/>
+        <text x="488" y="196" text-anchor="middle" class="hi-label">REJECTION</text>
+      </svg>
+    </div>
+  </header>
+
+  <section class="thread" id="thread" aria-live="polite"></section>
+
+  <form class="composer" id="composerForm" autocomplete="off">
+    <input type="text" id="messageInput" placeholder="Ask about a loan, or just say hello…" aria-label="Message" />
+    <button type="submit" id="sendBtn" aria-label="Send message">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/>
+      </svg>
+    </button>
+  </form>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
