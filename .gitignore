@@ -2,6 +2,4 @@
 __pycache__/
 *.pyc
 .env
-*.pkl
-node_modules/
-.DS_Store
+*.pkl  
