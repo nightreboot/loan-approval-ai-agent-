@@ -5,8 +5,7 @@ from math import isfinite
 from langchain.tools import tool
 from pydantic import BaseModel, Field, field_validator
 
-MODEL_PATH = (
-    Path(__file__).resolve().parent.parent/ "models"/ "Loan_Aprroval.pkl")
+MODEL_PATH = "/app/models/Loan_Aprroval.pkl"
 model = joblib.load(MODEL_PATH)
 
 
