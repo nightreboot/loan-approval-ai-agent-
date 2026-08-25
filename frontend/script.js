@@ -1,5 +1,5 @@
-const API_URL = "https://loan-approval-ai-agent-1.onrender.com/chat";
-const HEALTH_URL = "https://loan-approval-ai-agent-1.onrender.com/health";
+const API_URL = "http://127.0.0.1:8000/chat";
+const HEALTH_URL = "http://127.0.0.1:8000/health";
 
 const thread = document.getElementById('thread');
 const form = document.getElementById('composerForm');
