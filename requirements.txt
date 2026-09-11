@@ -1,4 +1,5 @@
-langchain-mistralai
+langchain-google-genai
+google-genai
 langchain
 python-dotenv
 pandas
