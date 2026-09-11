@@ -1,9 +1,10 @@
 from langchain_classic.memory import ConversationBufferMemory
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableLambda
 from dotenv import load_dotenv
 
 from app.schemas.loan_schema import llm, extract_loan_details
 from app.core.prompts import Prompts
+from app.utils.llm_response import extract_text
 
 load_dotenv()
 
@@ -13,7 +14,7 @@ memory = ConversationBufferMemory(return_messages=True)
 def Memories(user_input):
     details, missing = extract_loan_details(user_input)
 
-    chain = Prompts() | llm() | StrOutputParser()
+    chain = Prompts() | llm() | RunnableLambda(lambda msg: extract_text(msg.content))
     history = memory.load_memory_variables({})['history']
 
     if details is None:
