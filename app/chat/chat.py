@@ -4,6 +4,7 @@ from langchain_classic.memory import ConversationBufferMemory
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from app.utils.llm_response import extract_text
 import os
 
 
@@ -17,6 +18,8 @@ def get_llm():
         google_api_key=api_key,
     )
 
+
+# Module level so it persists across calls, same reasoning as core/memory.py.
 memory = ConversationBufferMemory(
     return_messages=True
 )
@@ -46,10 +49,11 @@ def model_response(query: str) -> str:
     chain = (RunnablePassthrough() | load_history | prompt | llm)
 
     response = chain.invoke({"question": query})
+    reply_text = extract_text(response.content)
 
     memory.save_context(
         {"input": query},
-        {"output": response.content}
+        {"output": reply_text}
     )
 
-    return response.content
+    return reply_text
