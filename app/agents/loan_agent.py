@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph, START, END
 from app.schemas.loan_schema import llm
 from app.core.memory import Memories
 from app.chat.chat import model_response
+from app.utils.llm_response import extract_text
 
 class AgentState(TypedDict):
     user_input: str
@@ -28,7 +29,7 @@ def classify_intent_node(state: AgentState) -> AgentState:
     """
 
     result = llm().invoke(classifier_prompt)
-    label = result.content.strip().lower()
+    label = extract_text(result.content).strip().lower()
 
     if "loan" in label:
         route = "loan"
