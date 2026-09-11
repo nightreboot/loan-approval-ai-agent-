@@ -1,15 +1,22 @@
+import os
 import re
 from pydantic import ValidationError
-from langchain_mistralai import ChatMistralAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from app.utils.ml_response import predict_loan_approval, ContentValidation
 
 
 def llm():
-    return ChatMistralAI(model="mistral-small-2603", temperature=0)
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY is missing in .env file")
+
+    return ChatGoogleGenerativeAI(
+        model="gemini-3.6-flash",
+        google_api_key=api_key,
+        temperature=0,
+    )
 
 
-# One regex per field. Matches the "Label: value" lines the frontend sends,
-# and is loose enough to also catch reasonably-formatted typed chat.
 FIELD_PATTERNS = {
     "no_of_dependents": r"depend(?:ent)?s?\s*:\s*([0-9]+)",
     "education": r"education\s*:\s*([A-Za-z ]+)",
@@ -38,7 +45,7 @@ FIELD_CASTS = {
     "bank_asset_value": float,
 }
 
-# Friendly names used when telling the user what's still missing.
+
 FIELD_LABELS = {
     "no_of_dependents": "Number of Dependents",
     "education": "Education",
@@ -83,8 +90,6 @@ def extract_loan_details(user_input: str):
     try:
         validated = ContentValidation(**found)
     except ValidationError as exc:
-        # Surface the pydantic errors as "missing" so the assistant asks
-        # the user to correct/resupply those fields rather than crashing.
         bad_fields = sorted({err["loc"][0] for err in exc.errors()})
         return None, [FIELD_LABELS.get(f, f) for f in bad_fields]
 
