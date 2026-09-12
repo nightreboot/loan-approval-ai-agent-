@@ -1,5 +1,4 @@
-langchain-google-genai
-google-genai
+langchain-openai
 langchain
 python-dotenv
 pandas
