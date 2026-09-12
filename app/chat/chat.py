@@ -1,28 +1,29 @@
 from dotenv import load_dotenv
 load_dotenv()
-from langchain_classic.memory import ConversationBufferMemory
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from app.utils.llm_response import extract_text
+from app.core.memory import memory  # shared instance — keeps chat/loan context in sync
 import os
+
+OPENROUTER_MODEL = "google/gemma-4-31b-it:free"
 
 
 def get_llm():
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        raise ValueError("GOOGLE_API_KEY is missing in .env file")
+        raise ValueError("OPENROUTER_API_KEY is missing in .env file")
 
-    return ChatGoogleGenerativeAI(
-        model="gemini-3.6-flash",
-        google_api_key=api_key,
+    return ChatOpenAI(
+        model=OPENROUTER_MODEL,
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={
+            "HTTP-Referer": "https://loan-approval-ai-agent-1.onrender.com",
+            "X-Title": "Loan Approval AI Assistant",
+        },
     )
-
-
-# Module level so it persists across calls, same reasoning as core/memory.py.
-memory = ConversationBufferMemory(
-    return_messages=True
-)
 
 
 def model_response(query: str) -> str:
