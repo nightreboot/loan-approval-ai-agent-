@@ -1,29 +1,11 @@
-import os
 import re
 from pydantic import ValidationError
-from langchain_openai import ChatOpenAI
 from app.utils.ml_response import predict_loan_approval, ContentValidation
-
-OPENROUTER_MODEL = "google/gemma-4-31b-it:free"
+from app.utils.llm_response import get_openrouter_llm
 
 
 def llm():
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        raise ValueError("OPENROUTER_API_KEY is missing in .env file")
-
-    return ChatOpenAI(
-        model=OPENROUTER_MODEL,
-        api_key=api_key,
-        base_url="https://openrouter.ai/api/v1",
-        temperature=0,
-        # OpenRouter recommends these so requests are attributed to your app
-        # (helps with their rate limiting on free models) — optional but safe.
-        default_headers={
-            "HTTP-Referer": "https://loan-approval-ai-agent-1.onrender.com",
-            "X-Title": "Loan Approval AI Assistant",
-        },
-    )
+    return get_openrouter_llm(temperature=0)
 
 
 # One regex per field. Loose enough to catch reasonably-formatted typed
