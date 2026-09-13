@@ -37,11 +37,16 @@ def extract_text(content) -> str:
 # Tried in order. OpenRouter's free-tier models share a pool and get
 # rate-limited (HTTP 429) or occasionally error out upstream — if the first
 # one is busy, we fall through to the next instead of failing the request.
+#
+# Ling 3.0 Flash Fin is a finance-tuned model (trained on financial data,
+# built for investment/financial reasoning workflows) — a strong match for
+# a loan-approval assistant, so it goes first. Nemotron 3 Ultra is a very
+# large, strong general-reasoning backup; the rest are solid general models.
 FALLBACK_MODELS = (
+    "inclusionai/ling-3.0-flash-fin:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
     "google/gemma-4-31b-it:free",
-    "google/gemma-4-26b-a4b-it:free",
-    "nvidia/nemotron-3-nano-30b-a3b:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
+    "nex-agi/nex-n2.5-pro:free",
 )
 
 _OPENROUTER_HEADERS = {
