@@ -30,6 +30,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+    open_form: bool = False
 
 
 @app.get("/health")
@@ -44,7 +45,10 @@ def chat(request: ChatRequest):
     Send one message to the agent and get its reply.
 
     The agent internally decides whether this is a loan-approval request
-    or general chat and routes it accordingly (see agent.py).
+    or general chat and routes it accordingly (see loan_agent.py). It also
+    decides whether the structured loan slip should be shown to the user
+    (open_form) — the frontend relies on this rather than guessing from
+    keywords in the user's message.
     """
     user_message = request.message.strip()
 
@@ -52,8 +56,8 @@ def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="message must not be empty")
 
     try:
-        reply = run_agent(user_message)
+        reply, open_form = run_agent(user_message)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
-    return ChatResponse(response=reply)
+    return ChatResponse(response=reply, open_form=open_form)
