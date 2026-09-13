@@ -12,7 +12,7 @@ memory = ConversationBufferMemory(return_messages=True)
 
 
 def Memories(user_input):
-    details, missing = extract_loan_details(user_input)
+    details, missing, open_form = extract_loan_details(user_input)
 
     chain = Prompts() | llm() | RunnableLambda(lambda msg: extract_text(msg.content))
     history = memory.load_memory_variables({})['history']
@@ -64,4 +64,4 @@ def Memories(user_input):
     )
 
     print("\nResponsing......")
-    return final_response
+    return final_response, open_form
