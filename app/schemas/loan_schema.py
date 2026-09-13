@@ -8,8 +8,8 @@ def llm():
     return get_openrouter_llm(temperature=0)
 
 
-# One regex per field. Loose enough to catch reasonably-formatted typed
-# chat, e.g. "annual income: 800000" or "cibil score is 720".
+# One regex per field. Matches the "Label: value" lines the frontend's slip
+# sends, and is loose enough to also catch reasonably-formatted typed chat.
 FIELD_PATTERNS = {
     "no_of_dependents": r"depend(?:ent)?s?\s*:?\s*(?:is|are)?\s*([0-9]+)",
     "education": r"education\s*:?\s*(?:is)?\s*([A-Za-z ]+)",
@@ -55,26 +55,29 @@ FIELD_LABELS = {
 
 # Fields collected so far for the loan application currently "in progress".
 # Persists across turns (module-level, same pattern as the memory buffers)
-# so the user never has to repeat a field they already gave in an earlier
-# message — this is what lets the assistant collect the 11 fields one at a
-# time over the conversation instead of needing them all in one message.
+# so the user never has to repeat a field they already gave.
 _collected: dict = {}
 
 
 def extract_loan_details(user_input: str):
     """
-    Parse loan fields out of free-form chat text and merge them into
-    whatever has already been collected for this in-progress application.
+    Parse loan fields out of free-form text (from either the slip or typed
+    chat) and merge them into whatever has already been collected for this
+    in-progress application.
 
     Returns:
-        (details_dict_with_prediction, [])
+        (details_dict_with_prediction, [], False)
             -> everything was present and valid; application is complete
                and _collected is reset for the next one.
-        (None, [missing_field_labels...])
-            -> one or more fields are still missing/invalid; the assistant
-               should ask the user for just those, conversationally.
+        (None, [missing_field_labels...], open_form)
+            -> one or more fields are still missing/invalid. open_form is
+               True only the first time we see a loan request with nothing
+               collected yet, so the frontend shows the structured slip
+               once instead of re-popping it on every loan-related message.
     """
     global _collected
+
+    starting_fresh = len(_collected) == 0
 
     for key, pattern in FIELD_PATTERNS.items():
         match = re.search(pattern, user_input, re.IGNORECASE)
@@ -91,7 +94,8 @@ def extract_loan_details(user_input: str):
     missing_keys = [k for k in FIELD_PATTERNS if k not in _collected]
 
     if missing_keys:
-        return None, [FIELD_LABELS[k] for k in missing_keys]
+        open_form = starting_fresh
+        return None, [FIELD_LABELS[k] for k in missing_keys], open_form
 
     try:
         validated = ContentValidation(**_collected)
@@ -101,14 +105,14 @@ def extract_loan_details(user_input: str):
         bad_fields = sorted({err["loc"][0] for err in exc.errors()})
         for f in bad_fields:
             _collected.pop(f, None)
-        return None, [FIELD_LABELS.get(f, f) for f in bad_fields]
+        return None, [FIELD_LABELS.get(f, f) for f in bad_fields], False
 
     details = validated.model_dump()
     prediction = predict_loan_approval.invoke(details)
 
     _collected = {}  # application complete — start clean for the next one
 
-    return {**details, "prediction": prediction}, []
+    return {**details, "prediction": prediction}, [], False
 
 
 def All_Details():
