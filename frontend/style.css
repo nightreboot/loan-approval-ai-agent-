@@ -225,6 +225,22 @@ body{
   font-size:13px;
 }
 
+/* Rendered from the model's "### heading" / "---" markdown so replies with
+   structured sections (predictions, factor lists, etc.) read cleanly
+   instead of showing raw hashes and dashes. */
+.bubble .msg-heading{
+  display:block;
+  margin:10px 0 4px;
+  font-size:14.5px;
+}
+.bubble .msg-heading:first-child{margin-top:0;}
+.bubble .msg-hr{
+  border:none;
+  border-top:1px dashed rgba(255,255,255,0.14);
+  margin:12px 0;
+}
+.entry.user .bubble .msg-hr{border-top-color:rgba(20,11,40,0.3);}
+
 .meta{font-size:10.5px; color:#6B6690; padding:0 3px; letter-spacing:.02em;}
 
 .typing{display:flex; gap:4px; padding:5px 3px;}
