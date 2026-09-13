@@ -9,6 +9,7 @@ class AgentState(TypedDict):
     user_input: str
     route: Literal["loan", "chat", ""]
     response: str
+    open_form: bool
 
 
 def classify_intent_node(state: AgentState) -> AgentState:
@@ -41,14 +42,14 @@ def classify_intent_node(state: AgentState) -> AgentState:
 
 def loan_node(state: AgentState) -> AgentState:
     """Run the loan-application intake + ML prediction + explanation flow."""
-    response = Memories(state["user_input"])
-    return {**state, "response": response}
+    response, open_form = Memories(state["user_input"])
+    return {**state, "response": response, "open_form": open_form}
 
 
 def chat_node(state: AgentState) -> AgentState:
     """Handle everything that isn't loan-related as normal conversation."""
     response = model_response(state["user_input"])
-    return {**state, "response": response}
+    return {**state, "response": response, "open_form": False}
 
 
 def route_decision(state: AgentState) -> str:
@@ -79,10 +80,17 @@ graph.add_edge("chat_node", END)
 app = graph.compile()
 
 
-def run_agent(user_input: str) -> str:
-    """Convenience wrapper: run one turn through the graph and return the reply."""
-    result = app.invoke({"user_input": user_input, "route": "", "response": ""})
-    return result["response"]
+def run_agent(user_input: str) -> tuple[str, bool]:
+    """Convenience wrapper: run one turn through the graph and return
+    (reply_text, open_form) — open_form tells the caller whether the
+    structured loan slip should be shown to the user."""
+    result = app.invoke({
+        "user_input": user_input,
+        "route": "",
+        "response": "",
+        "open_form": False,
+    })
+    return result["response"], result["open_form"]
 
 
 if __name__ == "__main__":
@@ -98,5 +106,7 @@ if __name__ == "__main__":
             print("\nAssistant: Goodbye!")
             break
 
-        response = run_agent(user_input)
+        response, open_form = run_agent(user_input)
         print(f"\nAssistant:\n{response}\n")
+        if open_form:
+            print("[frontend would open the loan slip here]\n")
