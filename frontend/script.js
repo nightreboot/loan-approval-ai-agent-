@@ -19,16 +19,6 @@ fetch(HEALTH_URL).then(r=>{
   statusDot.classList.add('off'); statusText.textContent = "Backend unreachable";
 });
 
-const LOAN_KEYWORDS = [
-  "loan","eligib","approv","reject","cibil","emi","borrow",
-  "mortgage","credit score","apply","interest rate","repay"
-];
-
-function looksLikeLoanRequest(text){
-  const t = text.toLowerCase();
-  return LOAN_KEYWORDS.some(k => t.includes(k));
-}
-
 function timeNow(){
   return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
 }
@@ -41,6 +31,14 @@ function renderMarkdownLite(text){
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+
+  // Horizontal rules on their own line ("---", "***", "___") -> a subtle divider.
+  // Must run before the header/bold rules and before newlines become <br>.
+  safe = safe.replace(/^[ \t]*(?:-{3,}|\*{3,}|_{3,})[ \t]*$/gm, '<hr class="msg-hr">');
+
+  // Headers ("# ", "## ", "### ", up to 6 #'s) -> a bold heading line,
+  // the leading hashes themselves are stripped rather than shown raw.
+  safe = safe.replace(/^#{1,6}[ \t]+(.*)$/gm, '<strong class="msg-heading">$1</strong>');
 
   safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   safe = safe.replace(/__(.+?)__/g, '<strong>$1</strong>');
@@ -122,113 +120,7 @@ form.addEventListener('submit', (e)=>{
   input.value = '';
 
   sendToBackend(text);
-  if(looksLikeLoanRequest(text)){
-    openLoanSlip();
-  }
 });
 
-// ---------- Loan slip (the form) ----------
-let slipCounter = 1;
-
-const FIELDS = [
-  { key:"no_of_dependents", label:"Dependents", min:0, step:1, placeholder:"0" },
-  { key:"education", label:"Education", type:"select", options:["Graduate","Not Graduate"] },
-  { key:"self_employed", label:"Self Employed", type:"select", options:["Yes","No"] },
-  { key:"annual_income", label:"Annual Income", min:0, step:1000, placeholder:"800000" },
-  { key:"loan_amount", label:"Loan Amount", min:0, step:1000, placeholder:"1200000" },
-  { key:"loan_term", label:"Loan Term (yrs)", min:1, step:1, placeholder:"10" },
-  { key:"residential_assets_value", label:"Residential Assets", min:0, step:1000, placeholder:"0" },
-  { key:"commercial_assets_value", label:"Commercial Assets", min:0, step:1000, placeholder:"0" },
-  { key:"luxury_assets_value", label:"Luxury Assets", min:0, step:1000, placeholder:"0" },
-  { key:"bank_asset_value", label:"Bank Assets", min:0, step:1000, placeholder:"0" },
-];
-
-function openLoanSlip(){
-  const wrap = document.createElement('div');
-  wrap.className = 'entry bot slip-wrap';
-  const id = String(slipCounter++).padStart(4,'0');
-
-  const fieldsHtml = FIELDS.map((f,i)=>{
-    const idx = String(i+1).padStart(2,'0');
-    if(f.type === "select"){
-      return `
-        <div class="field">
-          <label><span class="n">${idx}</span>${f.label}</label>
-          <select name="${f.key}" required>
-            <option value="" disabled selected>Choose…</option>
-            ${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}
-          </select>
-        </div>`;
-    }
-    return `
-      <div class="field">
-        <label><span class="n">${idx}</span>${f.label}</label>
-        <input type="number" name="${f.key}" min="${f.min}" step="${f.step}" placeholder="${f.placeholder}" required />
-      </div>`;
-  }).join('');
-
-  wrap.innerHTML = `
-    <div class="avatar bot">${BOT_ICON}</div>
-    <div class="slip">
-      <div class="slip-head">
-        <h3>Loan Application Slip</h3>
-        <span class="slip-id">NO. LA-${id}</span>
-      </div>
-      <form class="slip-form">
-        <div class="slip-grid">
-          ${fieldsHtml}
-          <div class="cibil-row">
-            <div class="field">
-              <label><span class="n">11</span>CIBIL Score (300–900)</label>
-              <input type="number" name="cibil_score" min="300" max="900" step="1" placeholder="720" required />
-            </div>
-            <div class="cibil-meter"><div class="ptr" id="ptr-${id}"></div></div>
-          </div>
-        </div>
-        <div class="slip-foot">
-          <div class="note">Stamping submits these details for an ML-based prediction. This does not guarantee a bank's final decision.</div>
-          <button type="submit" class="stamp-btn">STAMP<br>&amp; SUBMIT</button>
-        </div>
-      </form>
-    </div>
-  `;
-
-  thread.appendChild(wrap);
-  thread.scrollTop = thread.scrollHeight;
-
-  const slipForm = wrap.querySelector('.slip-form');
-  const cibilInput = slipForm.querySelector('[name="cibil_score"]');
-  const ptr = wrap.querySelector(`#ptr-${id}`);
-  cibilInput.addEventListener('input', ()=>{
-    const v = Math.min(900, Math.max(300, Number(cibilInput.value) || 300));
-    const pct = ((v - 300) / (900 - 300)) * 100;
-    ptr.style.left = pct + "%";
-  });
-
-  slipForm.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const stampBtn = slipForm.querySelector('.stamp-btn');
-    stampBtn.disabled = true;
-
-    const data = new FormData(slipForm);
-    const values = {};
-    for(const [k,v] of data.entries()) values[k] = v;
-
-    const summary = FIELDS.concat([{key:"cibil_score", label:"CIBIL Score"}])
-      .map(f => `${f.label}: ${values[f.key]}`)
-      .join("\n");
-
-    const message =
-`Here is my loan application:
-${summary}
-
-Please predict my loan approval.`;
-
-    addBubble('user', "Submitted loan application slip");
-    sendToBackend(message).finally(()=>{ stampBtn.disabled = false; });
-    wrap.remove();
-  });
-}
-
 // Greeting
-addBubble('bot', "Hello — I'm your loan assistant. Ask me anything, or tell me you'd like to check loan eligibility and I'll bring out an application slip.");
+addBubble('bot', "Hello — I'm your loan assistant. Ask me anything, or tell me you'd like to check loan eligibility and I'll ask you for the details right here in chat.");
